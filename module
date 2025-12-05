@@ -1,0 +1,250 @@
+import { Link, useParams } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { 
+  ArrowRight, 
+  ArrowLeft,
+  Clock, 
+  Star, 
+  CheckCircle, 
+  BookOpen,
+  Target,
+  Wallet,
+  PiggyBank,
+  TrendingUp,
+  CreditCard
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Module, ModuleCategory, UserProgress } from "@shared/schema";
+
+const categoryIcons: Record<ModuleCategory, typeof Wallet> = {
+  budgeting: Wallet,
+  saving: PiggyBank,
+  investing: TrendingUp,
+  debt: CreditCard,
+};
+
+const categoryColors: Record<ModuleCategory, { bg: string; text: string }> = {
+  budgeting: { bg: "bg-blue-100 dark:bg-blue-900", text: "text-blue-600 dark:text-blue-400" },
+  saving: { bg: "bg-green-100 dark:bg-green-900", text: "text-green-600 dark:text-green-400" },
+  investing: { bg: "bg-purple-100 dark:bg-purple-900", text: "text-purple-600 dark:text-purple-400" },
+  debt: { bg: "bg-orange-100 dark:bg-orange-900", text: "text-orange-600 dark:text-orange-400" },
+};
+
+type ModuleWithProgress = Module & { progress?: UserProgress };
+
+export default function ModuleIntroduction() {
+  const { id } = useParams<{ id: string }>();
+  
+  const { data: module, isLoading, error } = useQuery<ModuleWithProgress>({
+    queryKey: ["/api/modules", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/modules/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch module");
+      return res.json();
+    },
+    enabled: !!id
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <section className="py-12 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b">
+          <div className="container mx-auto px-4">
+            <Skeleton className="h-8 w-32 mb-4" />
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+              <div className="flex-1">
+                <Skeleton className="h-16 w-16 rounded-2xl mb-4" />
+                <Skeleton className="h-10 w-96 mb-4" />
+                <Skeleton className="h-6 w-full max-w-xl" />
+              </div>
+              <Skeleton className="w-full lg:w-80 h-64 rounded-lg" />
+            </div>
+          </div>
+        </section>
+        <div className="container mx-auto px-4 py-12">
+          <div className="max-w-3xl">
+            <Skeleton className="h-8 w-48 mb-6" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full mb-4" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !module) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <CardTitle className="mb-4 text-destructive">Module Not Found</CardTitle>
+          <CardDescription className="mb-6">
+            The module you're looking for doesn't exist or couldn't be loaded.
+          </CardDescription>
+          <Link href="/modules">
+            <Button>Back to Modules</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  const Icon = categoryIcons[module.category];
+  const colors = categoryColors[module.category];
+  const isCompleted = module.progress?.completed ?? false;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <section className={`py-12 bg-gradient-to-r ${colors.bg}/30 border-b`}>
+        <div className="container mx-auto px-4">
+          <Link href="/modules">
+            <Button variant="ghost" size="sm" className="mb-4 gap-2" data-testid="button-back-to-modules">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Modules
+            </Button>
+          </Link>
+
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`p-4 rounded-2xl ${colors.bg}`}>
+                  <Icon className={`h-10 w-10 ${colors.text}`} />
+                </div>
+                <div>
+                  <Badge variant="secondary" className="mb-2">
+                    {module.category.charAt(0).toUpperCase() + module.category.slice(1)}
+                  </Badge>
+                  <Badge variant="outline" className="ml-2">
+                    {module.difficulty.charAt(0).toUpperCase() + module.difficulty.slice(1)}
+                  </Badge>
+                  {isCompleted && (
+                    <Badge className="ml-2 bg-green-500">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Completed
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <h1 className="text-3xl md:text-4xl font-bold mb-4" data-testid="text-module-title">
+                {module.title}
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl">
+                {module.description}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-6 mt-6">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-5 w-5" />
+                  <span>{module.estimatedMinutes} minutes</span>
+                </div>
+                <div className="flex items-center gap-2 text-yellow-600">
+                  <Star className="h-5 w-5" />
+                  <span>{module.xpReward} XP reward</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <BookOpen className="h-5 w-5" />
+                  <span>{module.learningObjectives?.length ?? 0} objectives</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Module Outline Card */}
+            <Card className="w-full lg:w-80 shrink-0">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  Module Outline
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+                      1
+                    </div>
+                    <span className="font-medium">Introduction</span>
+                    <CheckCircle className="h-4 w-4 text-primary ml-auto" />
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-bold">
+                      2
+                    </div>
+                    <span>Lesson Content</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-bold">
+                      3
+                    </div>
+                    <span>Quiz</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-bold">
+                      4
+                    </div>
+                    <span>Results & Badge</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-muted-foreground">Progress</span>
+                    <span className="font-medium">25%</span>
+                  </div>
+                  <Progress value={25} className="h-2" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Learning Objectives */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Target className="h-6 w-6 text-primary" />
+              What You'll Learn
+            </h2>
+            
+            <div className="space-y-4">
+              {module.learningObjectives?.map((objective, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-start gap-4 p-4 rounded-lg bg-card border"
+                  data-testid={`objective-${index + 1}`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 font-medium">
+                    {index + 1}
+                  </div>
+                  <p className="text-foreground pt-1">{objective}</p>
+                </div>
+              )) ?? (
+                <p className="text-muted-foreground">No learning objectives defined for this module.</p>
+              )}
+            </div>
+
+            {/* Start Module Button */}
+            <div className="mt-12 flex flex-col sm:flex-row gap-4">
+              <Link href={`/module/${module.id}/lesson`} className="flex-1 sm:flex-none">
+                <Button size="lg" className="w-full sm:w-auto gap-2 text-lg px-8" data-testid="button-start-module">
+                  {isCompleted ? "Review Module" : "Start Module"}
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/modules">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  Back to All Modules
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
