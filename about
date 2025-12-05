@@ -1,0 +1,279 @@
+import { 
+  Target, 
+  Users, 
+  BookOpen,
+  Heart,
+  Lightbulb,
+  Shield,
+  Zap,
+  Globe,
+  ArrowRight
+} from "lucide-react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { FinLearnLogo } from "@/components/FinLearnLogo";
+
+const values = [
+  {
+    icon: Lightbulb,
+    title: "Accessible Education",
+    description: "We believe financial literacy should be accessible to everyone, regardless of their background or starting point."
+  },
+  {
+    icon: Zap,
+    title: "Engaging Learning",
+    description: "Learning about finance doesn't have to be boring. We make it fun, interactive, and rewarding."
+  },
+  {
+    icon: Shield,
+    title: "Safe Environment",
+    description: "Practice financial decisions in a safe environment without real-world consequences."
+  },
+  {
+    icon: Heart,
+    title: "Student-First",
+    description: "Every feature we build is designed with students and young adults in mind."
+  }
+];
+
+const stats = [
+  { value: "50+", label: "Learning Modules" },
+  { value: "10K+", label: "Active Learners" },
+  { value: "95%", label: "Satisfaction Rate" },
+  { value: "4.9", label: "User Rating" }
+];
+
+const team = [
+  {
+    name: "Dr. Sarah Chen",
+    role: "Founder & CEO",
+    bio: "Former economics professor with a passion for financial education.",
+    initials: "SC"
+  },
+  {
+    name: "Marcus Johnson",
+    role: "Head of Content",
+    bio: "Certified financial planner with 15 years of experience.",
+    initials: "MJ"
+  },
+  {
+    name: "Priya Patel",
+    role: "Lead Developer",
+    bio: "EdTech enthusiast building engaging learning experiences.",
+    initials: "PP"
+  },
+  {
+    name: "Alex Rivera",
+    role: "UX Designer",
+    bio: "Creating intuitive interfaces that make learning enjoyable.",
+    initials: "AR"
+  }
+];
+
+export default function About() {
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-primary/10 via-blue-500/5 to-transparent py-20 border-b">
+        <div className="container mx-auto px-4 text-center">
+          <FinLearnLogo size="lg" />
+          <h1 className="text-3xl md:text-5xl font-bold mt-8 mb-4">
+            Empowering Financial Literacy
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            FinLearn is on a mission to help young people build real-life financial skills 
+            through gamified, interactive learning experiences.
+          </p>
+        </div>
+      </section>
+
+      {/* Mission Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <Target className="h-5 w-5" />
+                  <span className="font-semibold uppercase tracking-wide text-sm">Our Mission</span>
+                </div>
+                <h2 className="text-3xl font-bold mb-4">
+                  Making Finance Fun & Accessible
+                </h2>
+                <p className="text-muted-foreground mb-4">
+                  We created FinLearn because we saw a gap: even though there's more financial 
+                  information available than ever before, many young people still struggle with 
+                  basic money skills.
+                </p>
+                <p className="text-muted-foreground">
+                  Our platform transforms complex financial concepts into simple, engaging 
+                  experiences. Through interactive videos, micro-quizzes, challenges, and 
+                  real-world simulations, we help users build practical financial skills 
+                  that last a lifetime.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {stats.map((stat) => (
+                  <Card key={stat.label} className="text-center">
+                    <CardContent className="p-6">
+                      <p className="text-3xl font-bold text-primary">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Values Section */}
+      <section className="py-16 bg-card">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Our Values</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              These core principles guide everything we do at FinLearn.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {values.map((value) => (
+              <Card key={value.title}>
+                <CardContent className="p-6 text-center">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
+                    <value.icon className="h-7 w-7 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">{value.title}</h3>
+                  <p className="text-sm text-muted-foreground">{value.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-2 text-primary mb-4">
+              <Users className="h-5 w-5" />
+              <span className="font-semibold uppercase tracking-wide text-sm">Our Team</span>
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Meet the People Behind FinLearn</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              A passionate team of educators, developers, and designers working to make 
+              financial literacy accessible to everyone.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {team.map((member) => (
+              <Card key={member.name}>
+                <CardContent className="p-6 text-center">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-primary">{member.initials}</span>
+                  </div>
+                  <h3 className="font-semibold">{member.name}</h3>
+                  <p className="text-sm text-primary mb-2">{member.role}</p>
+                  <p className="text-sm text-muted-foreground">{member.bio}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why FinLearn Section */}
+      <section className="py-16 bg-card">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 text-primary mb-4">
+              <BookOpen className="h-5 w-5" />
+              <span className="font-semibold uppercase tracking-wide text-sm">Why FinLearn</span>
+            </div>
+            <h2 className="text-3xl font-bold mb-6">A Different Approach to Learning</h2>
+            
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">
+                  1
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Gamified Experience</h3>
+                  <p className="text-muted-foreground">
+                    Earn XP, unlock badges, and compete on leaderboards. Learning finance 
+                    feels like playing a game.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">
+                  2
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Bite-sized Modules</h3>
+                  <p className="text-muted-foreground">
+                    Short, focused lessons that fit into your busy schedule. Learn in 
+                    15-minute sessions.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">
+                  3
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Real-World Simulations</h3>
+                  <p className="text-muted-foreground">
+                    Practice making financial decisions in safe, realistic scenarios 
+                    before applying them in real life.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">
+                  4
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Expert-Created Content</h3>
+                  <p className="text-muted-foreground">
+                    All content is developed by certified financial planners and 
+                    education experts.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-primary to-green-600 dark:from-primary/80 dark:to-green-700">
+        <div className="container mx-auto px-4 text-center">
+          <Globe className="h-12 w-12 text-white mx-auto mb-6" />
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Join Our Community
+          </h2>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Be part of a growing community of learners improving their financial futures.
+          </p>
+          <Link href="/modules">
+            <Button 
+              size="lg" 
+              className="bg-white text-primary hover:bg-white/90 gap-2 text-lg px-8 no-default-hover-elevate"
+            >
+              Start Learning Today
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
