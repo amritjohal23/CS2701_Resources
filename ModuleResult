@@ -1,0 +1,361 @@
+import { useState, useEffect } from "react";
+import { Link, useParams, useSearch } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { 
+  ArrowRight, 
+  CheckCircle,
+  XCircle,
+  Trophy,
+  Star,
+  Sparkles,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  Award,
+  Loader2
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { UserProgress, Module } from "@shared/schema";
+
+interface QuizResultData {
+  moduleId: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  xpEarned: number;
+  passed: boolean;
+  badgeUnlocked?: { id: string; name: string; description: string };
+  results: Array<{
+    questionId: string;
+    correct: boolean;
+    selectedAnswer: number;
+    correctAnswer: number;
+    explanation: string;
+  }>;
+}
+
+export default function ModuleResults() {
+  const { id } = useParams<{ id: string }>();
+  const searchString = useSearch();
+  const [showReview, setShowReview] = useState(false);
+  const [animateScore, setAnimateScore] = useState(false);
+  const [animateBadge, setAnimateBadge] = useState(false);
+
+  const params = new URLSearchParams(searchString);
+  const resultParam = params.get("result");
+  
+  let quizResultFromUrl: QuizResultData | null = null;
+  try {
+    if (resultParam) {
+      quizResultFromUrl = JSON.parse(decodeURIComponent(resultParam));
+    }
+  } catch (e) {
+    console.error("Failed to parse quiz result:", e);
+  }
+
+  const { data: moduleData, isLoading: moduleLoading } = useQuery<Module & { progress?: UserProgress }>({
+    queryKey: ["/api/modules", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/modules/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch module");
+      return res.json();
+    },
+    enabled: !!id && !quizResultFromUrl
+  });
+
+  const hasProgressFromBackend = moduleData?.progress?.completed && moduleData?.progress?.quizScore !== undefined;
+  
+  const score = quizResultFromUrl?.score ?? moduleData?.progress?.quizScore ?? 0;
+  const passed = quizResultFromUrl?.passed ?? (score >= 70);
+  const earnedXp = quizResultFromUrl?.xpEarned ?? moduleData?.progress?.xpEarned ?? 0;
+  const correctCount = quizResultFromUrl?.correctAnswers ?? Math.round((score / 100) * 5);
+  const totalQuestions = quizResultFromUrl?.totalQuestions ?? 5;
+  const earnedBadge = !!quizResultFromUrl?.badgeUnlocked || (score >= 80);
+  const badge = quizResultFromUrl?.badgeUnlocked;
+  const results = quizResultFromUrl?.results ?? [];
+
+  const isLoading = moduleLoading && !quizResultFromUrl;
+  const hasResults = quizResultFromUrl || hasProgressFromBackend;
+
+  useEffect(() => {
+    if (hasResults) {
+      setTimeout(() => setAnimateScore(true), 300);
+      if (earnedBadge) {
+        setTimeout(() => setAnimateBadge(true), 1000);
+      }
+    }
+  }, [hasResults, earnedBadge]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-12 border-b">
+          <div className="container mx-auto px-4 text-center">
+            <Skeleton className="h-20 w-20 rounded-full mx-auto mb-6" />
+            <Skeleton className="h-10 w-64 mx-auto mb-2" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardContent className="p-8">
+                <div className="flex items-center justify-center mb-8">
+                  <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+                </div>
+                <p className="text-center text-muted-foreground">Loading your results...</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasResults) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 text-center max-w-md">
+          <Trophy className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <CardTitle className="mb-4">No Results Yet</CardTitle>
+          <CardDescription className="mb-6">
+            You haven't completed the quiz for this module yet. Take the quiz to see your results!
+          </CardDescription>
+          <div className="flex flex-col gap-3">
+            <Link href={`/module/${id}/quiz`}>
+              <Button className="w-full">Take Quiz</Button>
+            </Link>
+            <Link href="/modules">
+              <Button variant="outline" className="w-full">Back to Modules</Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Results Header */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-12 border-b">
+        <div className="container mx-auto px-4 text-center">
+          {passed ? (
+            <>
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
+                <Trophy className="h-10 w-10 text-primary" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                {score >= 90 ? "Excellent Work!" : score >= 80 ? "Great Job!" : "Good Job!"}
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                You've successfully completed this module's quiz!
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-orange-100 dark:bg-orange-900 mb-6">
+                <RotateCcw className="h-10 w-10 text-orange-500" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">Keep Learning!</h1>
+              <p className="text-lg text-muted-foreground">
+                You need 70% to pass. Review the lesson and try again!
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Score Card */}
+          <Card className="mb-8">
+            <CardContent className="p-8">
+              <div className="text-center mb-8">
+                <div className="relative inline-flex items-center justify-center">
+                  <svg className="w-40 h-40 transform -rotate-90">
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="70"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="12"
+                      className="text-muted"
+                    />
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="70"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="12"
+                      strokeLinecap="round"
+                      strokeDasharray={440}
+                      strokeDashoffset={animateScore ? 440 - (440 * score) / 100 : 440}
+                      className={`transition-all duration-1000 ease-out ${
+                        passed ? "text-primary" : "text-orange-500"
+                      }`}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span 
+                      className={`text-5xl font-bold ${passed ? "text-primary" : "text-orange-500"}`}
+                      data-testid="text-score"
+                    >
+                      {score}%
+                    </span>
+                    <span className="text-sm text-muted-foreground">Score</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-2xl font-bold text-primary">{correctCount}</p>
+                  <p className="text-sm text-muted-foreground">Correct</p>
+                </div>
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-2xl font-bold text-destructive">{totalQuestions - correctCount}</p>
+                  <p className="text-sm text-muted-foreground">Incorrect</p>
+                </div>
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-2xl font-bold text-yellow-500">+{earnedXp}</p>
+                  <p className="text-sm text-muted-foreground">XP Earned</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Badge Unlock */}
+          {earnedBadge && badge && (
+            <Card className={`mb-8 border-primary/50 overflow-hidden transition-all duration-500 ${
+              animateBadge ? "opacity-100 scale-100" : "opacity-0 scale-95"
+            }`}>
+              <div className="bg-gradient-to-r from-primary/10 to-yellow-500/10 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                      <Award className="h-8 w-8 text-white" />
+                    </div>
+                    <Sparkles className="absolute -top-1 -right-1 h-5 w-5 text-yellow-500 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Badge Unlocked!</span>
+                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                    </div>
+                    <h3 className="text-xl font-bold">{badge.name}</h3>
+                    <p className="text-sm text-muted-foreground">{badge.description}</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Review Answers - Only show if we have detailed results */}
+          {results.length > 0 && (
+            <Card className="mb-8">
+              <Collapsible open={showReview} onOpenChange={setShowReview}>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="cursor-pointer hover-elevate rounded-t-lg">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Review Your Answers</CardTitle>
+                      {showReview ? (
+                        <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0">
+                    <div className="space-y-6">
+                      {results.map((result, index) => (
+                        <div 
+                          key={index} 
+                          className={`p-4 rounded-lg border ${
+                            result.correct 
+                              ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
+                              : "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800"
+                          }`}
+                          data-testid={`review-question-${index + 1}`}
+                        >
+                          <div className="flex items-start gap-3 mb-3">
+                            {result.correct ? (
+                              <CheckCircle className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                            )}
+                            <p className="font-medium">Question {index + 1}</p>
+                          </div>
+                          
+                          <div className="ml-8 space-y-2">
+                            <p className="text-sm">
+                              <span className="text-muted-foreground">Your answer: </span>
+                              <span className={result.correct ? "text-green-600" : "text-red-600"}>
+                                Option {result.selectedAnswer + 1}
+                              </span>
+                            </p>
+                            {!result.correct && (
+                              <p className="text-sm">
+                                <span className="text-muted-foreground">Correct answer: </span>
+                                <span className="text-green-600">Option {result.correctAnswer + 1}</span>
+                              </p>
+                            )}
+                            {result.explanation && (
+                              <p className="text-sm text-muted-foreground mt-2 italic">
+                                {result.explanation}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+          )}
+
+          {/* Navigation */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {!passed ? (
+              <>
+                <Link href={`/module/${id}/lesson`}>
+                  <Button variant="outline" className="w-full sm:w-auto gap-2">
+                    <RotateCcw className="h-4 w-4" />
+                    Review Lesson
+                  </Button>
+                </Link>
+                <Link href={`/module/${id}/quiz`}>
+                  <Button className="w-full sm:w-auto gap-2" data-testid="button-retry-quiz">
+                    Try Quiz Again
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/modules">
+                  <Button variant="outline" className="w-full sm:w-auto gap-2">
+                    Back to Modules
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button className="w-full sm:w-auto gap-2" data-testid="button-view-dashboard">
+                    View Dashboard
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
